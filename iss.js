@@ -9,7 +9,7 @@ const fetchMyIP = function(callback) {
       return;
     }
     
-    const ip = JSON.parse(body).ip
+    const ip = JSON.parse(body).ip;
     callback(null, ip);
   });
 };
@@ -38,11 +38,33 @@ const fetchISSFlyOverTimes = function(coords, callback) {
     if (response.statusCode !== 200) {
       callback(Error(`Status Code ${response.statusCode} when fetching ISS pass times: ${body}`), null);
       return;
-    };
+    }
     
     const parsedBody = JSON.parse(body);
     callback(null, parsedBody.response);
   });
 };
 
-module.exports = { fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes };
+const nextISSTimesForMyLocation = function(callback) {
+  fetchMyIP((error, ip) => {
+    if (error) {
+      return callback(error, null);
+    }
+
+    fetchCoordsByIP(ip, (error, coords) => {
+      if (error) {
+        return callback(error, null);
+      }
+
+      fetchISSFlyOverTimes(coords, (error, times) => {
+        if (error) {
+          return callback(error, null);
+        }
+
+        callback(null, times);
+      });
+    });
+  });
+};
+
+module.exports = { fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes, nextISSTimesForMyLocation };
